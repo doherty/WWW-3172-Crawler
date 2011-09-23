@@ -1,0 +1,75 @@
+#!/usr/bin/env perl
+package crawler;
+use v5.10.1;
+use strict;
+use warnings;
+# ABSTRACT: command-line script to control WWW::3172::Crawler
+# VERSION
+
+use WWW::3172::Crawler;
+use Getopt::Long;
+use Pod::Usage;
+use Data::Printer alias => 'dump';
+
+my %opts = (
+    max => 50,
+);
+GetOptions( \%opts,
+    'help|?',
+    'version',
+    'max=i',
+    'dry-run',
+    'debug',
+);
+
+my $host = shift;
+pod2usage(
+    -verbose => 2,
+) if $opts{help} or !$host;
+
+=head1 SYNOPSIS
+
+    3137-crawler http://example.com
+    3137-crawler --max=50 http://example.com
+
+=head1 DESCRIPTION
+
+B<3172-crawler> is a command line script to control a L<crawler|WWW::3172::Crawler>.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<--max>
+
+Specify the maximum number of pages to crawl. Default is 50.
+
+=item B<--help>, -h, -?
+
+Opens this man page and exits.
+
+=item B<--version>
+
+Prints the version of this program and supporting libraries.
+
+=back
+
+=cut
+
+if (delete $opts{version}) {
+    my $this = __PACKAGE__;
+    my $this_ver = defined __PACKAGE__->VERSION ? __PACKAGE__->VERSION : 'dev';
+    say "$this version $this_ver" and exit;
+}
+
+say "Crawling $opts{max} pages, starting at $host";
+say "Dry run -- aborting" and exit if $opts{'dry-run'};
+my $crawler = WWW::3172::Crawler->new(
+    host    => $host,
+    max     => $opts{max},
+    debug   => $opts{debug},
+);
+
+my $data = $crawler->crawl;
+dump $data;
+
