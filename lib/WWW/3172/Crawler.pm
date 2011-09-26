@@ -98,22 +98,21 @@ sub _parse {
     my $html = shift;
 
     my $parser = HTML::TokeParser::Simple->new(string => $html);
-
     PARSE: while (my $token = $parser->get_token) {
-        if ($token->is_tag('meta')) {
+        if ($token->is_tag('meta')) { # a meta tag! - something to remember & report back later
             my $attr = $token->get_attr || next PARSE;
             my $type = $attr->{name}    || next PARSE;
-            next PARSE unless $type =~ m/description|keywords/;
+            next PARSE unless $type =~ m/^(?:description|keywords)$/;
 
             $self->data->{$uri}->{$type} = $attr->{content};
         }
-        elsif ($token->is_tag('a')) { # something to crawl in the future
+        elsif ($token->is_tag('a')) { # a link! - something to crawl in the future
             my $attr = $token->get_attr || next PARSE;
             my $href = $attr->{href}    || next PARSE;
             is_web_uri($href)           || next PARSE;
 
-            $self->{to_crawl}->{ $href }++
-                unless $self->{crawled}->{ $href }; # We can track what pages are popular
+            $self->{to_crawl}->{ $href }++ # We can track what pages are popular
+                unless $self->{crawled}->{ $href };
         }
         else {
             next PARSE;
@@ -130,6 +129,7 @@ sub _next_uri_to_crawl {
         my @links = nsort_by { $self->{to_crawl}->{$_} } keys %{ $self->{to_crawl} };
 
         my $url = pop @links;
+        return unless $url;
         my $uri = URI->new($url);
         delete $self->{to_crawl}->{$url};
 
@@ -190,6 +190,7 @@ sub crawl {
     my $pages_crawled = 0;
     CRAWL: while ( my $uri = $self->_next_uri_to_crawl() ) {
         last CRAWL if $pages_crawled >= $self->max;
+        last CRAWL if !defined($uri);
         next CRAWL if $self->{crawled}->{$uri};
         say STDERR 'Crawling #' . ($pages_crawled+1) . '/' . $self->max . ": $uri" if $self->debug;
 

@@ -36,17 +36,19 @@ METHODS
 AVAILABILITY
     The latest version of this module is available from the Comprehensive
     Perl Archive Network (CPAN). Visit <http://www.perl.com/CPAN/> to find a
-    CPAN site near you, or see <http://search.cpan.org/dist/WWW-3172/>.
+    CPAN site near you, or see
+    <http://search.cpan.org/dist/WWW-3172-Crawler/>.
 
-    The development version lives at <http://github.com/doherty/WWW-3172>
-    and may be cloned from <git://github.com/doherty/WWW-3172.git>. Instead
-    of sending patches, please fork this project using the standard git and
-    github infrastructure.
+    The development version lives at
+    <http://github.com/doherty/WWW-3172-Crawler> and may be cloned from
+    <git://github.com/doherty/WWW-3172-Crawler.git>. Instead of sending
+    patches, please fork this project using the standard git and github
+    infrastructure.
 
 SOURCE
     The development version is on github at
-    <http://github.com/doherty/WWW-3172> and may be cloned from
-    <git://github.com/doherty/WWW-3172.git>
+    <http://github.com/doherty/WWW-3172-Crawler> and may be cloned from
+    <git://github.com/doherty/WWW-3172-Crawler.git>
 
 BUGS AND LIMITATIONS
     No bugs have been reported.

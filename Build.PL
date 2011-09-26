@@ -23,10 +23,10 @@ my %module_build_args = (
   "dist_author" => [
     "Mike Doherty <doherty\@cpan.org>"
   ],
-  "dist_name" => "WWW-3172",
+  "dist_name" => "WWW-3172-Crawler",
   "dist_version" => "0.001",
   "license" => "perl",
-  "module_name" => "WWW::3172",
+  "module_name" => "WWW::3172::Crawler",
   "recommends" => {},
   "recursive_test_files" => 1,
   "requires" => {
@@ -38,10 +38,8 @@ my %module_build_args = (
     "List::UtilsBy" => 0,
     "Moose" => 0,
     "Moose::Util::TypeConstraints" => 0,
-    "Params::Coerce" => 0,
     "Pod::Usage" => 0,
     "Time::HiRes" => 0,
-    "URI" => 0,
     "namespace::autoclean" => 0,
     "perl" => "v5.10.1",
     "strict" => 0,

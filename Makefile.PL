@@ -24,12 +24,12 @@ my %WriteMakefileArgs = (
     "ExtUtils::MakeMaker" => "6.30",
     "Module::Build" => "0.3601"
   },
-  "DISTNAME" => "WWW-3172",
+  "DISTNAME" => "WWW-3172-Crawler",
   "EXE_FILES" => [
     "bin/crawler"
   ],
   "LICENSE" => "perl",
-  "NAME" => "WWW::3172",
+  "NAME" => "WWW::3172::Crawler",
   "PREREQ_PM" => {
     "Data::Printer" => 0,
     "Data::Validate::URI" => 0,
@@ -39,10 +39,8 @@ my %WriteMakefileArgs = (
     "List::UtilsBy" => 0,
     "Moose" => 0,
     "Moose::Util::TypeConstraints" => 0,
-    "Params::Coerce" => 0,
     "Pod::Usage" => 0,
     "Time::HiRes" => 0,
-    "URI" => 0,
     "namespace::autoclean" => 0,
     "strict" => 0,
     "warnings" => 0
