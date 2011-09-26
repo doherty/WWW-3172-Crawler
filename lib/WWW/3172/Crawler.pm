@@ -45,7 +45,7 @@ has 'ua' => (
             from    => 'doherty@cs.dal.ca',
             timeout => 30,
         );
-        $ua->delay(0);#1/60); # crawl delay of only 1s
+        $ua->delay(1/60); # crawl delay of only 1s
         return $ua;
     },
     lazy    => 1,
