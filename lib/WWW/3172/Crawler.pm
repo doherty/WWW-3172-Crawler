@@ -32,7 +32,13 @@ has 'host' => (
 has 'max' => (
     is      => 'ro',
     isa     => 'Num',
-    default => 2,
+    default => 200,
+);
+
+has 'delay' => (
+    is      => 'ro',
+    isa     => 'Num',
+    default => 1/60,
 );
 
 has 'ua' => (
@@ -40,13 +46,12 @@ has 'ua' => (
     isa     => 'LWP::UserAgent',
     required=> 1,
     default => sub {
-        my $ua = LWP::RobotUA->new(
+        LWP::RobotUA->new(
             agent   => (__PACKAGE__ . '/' . (defined __PACKAGE__->VERSION ? __PACKAGE__->VERSION : 'dev')),
             from    => 'doherty@cs.dal.ca',
             timeout => 30,
+            delay   => shift->delay,
         );
-        $ua->delay(1/60); # crawl delay of only 1s
-        return $ua;
     },
     lazy    => 1,
     handles => ['get'],
@@ -74,7 +79,7 @@ sub _fetch {
 
     my $start = time;
     my $page = $self->get($uri);
-    my $elapsed = time - $start;
+    my $elapsed = time - $start - $self->delay; # Don't forget to account for the wait time
 
     $self->{crawled}->{$uri}++;
     return unless $page->is_success;
@@ -89,6 +94,7 @@ sub _fetch {
 #        : length $page->decoded_content) || length $page->decoded_content;
 
     $self->data->{$uri}->{speed}= $elapsed;
+
     return $page->decoded_content;
 }
 
