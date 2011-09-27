@@ -84,15 +84,7 @@ sub _fetch {
     $self->{crawled}->{$uri}++;
     return unless $page->is_success;
 
-    $self->data->{$uri}->{size} = $page->headers->content_length || length $page->decoded_content;
-    # If there are headers, but no Content-Length header, then we'll
-    # get undef, which is wrong, so we need the extra fallback. The
-    # first fallback is for if there aren't headers for some reason
-    # (which I did encounter, surprisingly).
-#    $self->data->{$uri}->{size} = (defined $page->headers
-#        ? $page->headers->content_length
-#        : length $page->decoded_content) || length $page->decoded_content;
-
+    $self->data->{$uri}->{size} = $page->content_length || length $page->decoded_content;;
     $self->data->{$uri}->{speed}= $elapsed;
 
     return $page->decoded_content;
