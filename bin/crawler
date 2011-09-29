@@ -1,6 +1,5 @@
 #!/usr/bin/env perl
 package crawler;
-use v5.10.1;
 use strict;
 use warnings;
 # ABSTRACT: command-line script to control WWW::3172::Crawler
@@ -18,7 +17,6 @@ GetOptions( \%opts,
     'help|?',
     'version',
     'max=i',
-    'dry-run',
     'debug',
 );
 
@@ -52,6 +50,10 @@ Opens this man page and exits.
 
 Prints the version of this program and supporting libraries.
 
+=item B<--debug>
+
+Print debugging information.
+
 =back
 
 =cut
@@ -59,11 +61,11 @@ Prints the version of this program and supporting libraries.
 if (delete $opts{version}) {
     my $this = __PACKAGE__;
     my $this_ver = defined __PACKAGE__->VERSION ? __PACKAGE__->VERSION : 'dev';
-    say "$this version $this_ver" and exit;
+    print "$this version $this_ver\n" and exit;
 }
 
-say "Crawling $opts{max} pages, starting at $host";
-say "Dry run -- aborting" and exit if $opts{'dry-run'};
+print "Crawling $opts{max} pages, starting at $host\n";
+print "Dry run -- aborting\n" and exit if $opts{'dry-run'};
 my $crawler = WWW::3172::Crawler->new(
     host    => $host,
     max     => $opts{max},

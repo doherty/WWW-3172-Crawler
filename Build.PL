@@ -41,7 +41,7 @@ my %module_build_args = (
     "Pod::Usage" => 0,
     "Time::HiRes" => 0,
     "namespace::autoclean" => 0,
-    "perl" => "v5.10.1",
+    "perl" => "5.006",
     "strict" => 0,
     "warnings" => 0
   },

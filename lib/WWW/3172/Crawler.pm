@@ -1,5 +1,4 @@
 package WWW::3172::Crawler;
-use v5.10.1;
 use strict;
 use warnings;
 # ABSTRACT: A simple web crawler for CSCI 3172 Assignment 1
@@ -63,8 +62,21 @@ has 'data' => (
     default => sub { {} },
 );
 
-has 'debug' => (
+has 'crawled' => (
     is      => 'ro',
+    isa     => 'HashRef',
+    default => sub { {} },
+);
+
+has 'to_crawl' => (
+    is      => 'ro',
+    isa     => 'HashRef',
+    default => sub { return { shift->host => 1 }; },
+    lazy    => 1,
+);
+
+has 'debug' => (
+    is      => 'rw',
     isa     => 'Bool',
     default => 0,
 );
@@ -79,15 +91,14 @@ sub _fetch {
 
     my $start = time;
     my $page = $self->get($uri);
-    my $elapsed = time - $start - $self->delay; # Don't forget to account for the wait time
-
-    $self->{crawled}->{$uri}++;
     return unless $page->is_success;
 
-    $self->data->{$uri}->{size} = $page->content_length || length $page->decoded_content;;
-    $self->data->{$uri}->{speed}= $elapsed;
+    $self->crawled->{$uri}++;
+    $self->data->{$uri}->{speed} = time - $start - $self->delay; # Don't forget to account for the wait time;
+    $self->data->{$uri}->{size} = $page->content_length
+        || length $page->decoded_content;
 
-    return $page->decoded_content;
+    return $page;
 }
 
 sub _parse {
@@ -95,6 +106,7 @@ sub _parse {
     my $uri  = shift;
     my $html = shift;
 
+    return unless $html;
     my $parser = HTML::TokeParser::Simple->new(string => $html);
     PARSE: while (my $token = $parser->get_token) {
         if ($token->is_tag('meta')) { # a meta tag! - something to remember & report back later
@@ -109,8 +121,16 @@ sub _parse {
             my $href = $attr->{href}    || next PARSE;
             is_web_uri($href)           || next PARSE;
 
-            $self->{to_crawl}->{ $href }++ # We can track what pages are popular
-                unless $self->{crawled}->{ $href };
+            $self->to_crawl->{ $href }++ # We can track what pages are popular
+                unless $self->crawled->{ $href };
+        }
+        elsif ($token->is_tag('img')) { # an image! - something to... download?! O.o
+            my $attr = $token->get_attr || next PARSE;
+            my $href = $attr->{src}     || next PARSE;
+            is_web_uri($href)           || next PARSE;
+
+            $self->to_crawl->{ $href }++
+                unless $self->crawled->{ $href };
         }
         else {
             next PARSE;
@@ -123,19 +143,14 @@ sub _parse {
 sub _next_uri_to_crawl {
     my $self = shift;
 
-    if ( $self->{crawled}->{ $self->host } ) {
-        my @links = nsort_by { $self->{to_crawl}->{$_} } keys %{ $self->{to_crawl} };
+    my @links = nsort_by { $self->to_crawl->{$_} } keys %{ $self->to_crawl };
 
-        my $url = pop @links;
-        return unless $url;
-        my $uri = URI->new($url);
-        delete $self->{to_crawl}->{$url};
+    my $url = pop @links;
+    return unless $url;
+    delete $self->to_crawl->{$url};
 
-        return $uri;
-    }
-    else {
-        return $self->host;
-    }
+    print STDERR "Next URL: $url\n" if $self->debug;
+    return $url;
 }
 
 =head2 crawl
@@ -189,11 +204,21 @@ sub crawl {
     CRAWL: while ( my $uri = $self->_next_uri_to_crawl() ) {
         last CRAWL if $pages_crawled >= $self->max;
         last CRAWL if !defined($uri);
-        next CRAWL if $self->{crawled}->{$uri};
-        say STDERR 'Crawling #' . ($pages_crawled+1) . '/' . $self->max . ": $uri" if $self->debug;
+        next CRAWL if $self->crawled->{$uri};
+        print STDERR 'Crawling #' . ($pages_crawled+1) . '/' . $self->max . ": $uri\n" if $self->debug;
 
-        my $html = $self->_fetch($uri) || next CRAWL;
-        $self->_parse($uri, $html);
+        my $res = $self->_fetch($uri) || next CRAWL;
+
+        if ($res->content_type eq 'text/html') {
+            $self->_parse($uri, $res->decoded_content);
+        }
+        elsif ($res->content_type =~ m{^image/}) {
+            print STDERR "$uri is an image: " . $res->content_type . "\n" if $self->debug;
+            $self->_parse($uri);
+        }
+        else {
+            warn "$uri is an unknown type: " . $res->content_type;
+        }
         $pages_crawled++;
     }
 

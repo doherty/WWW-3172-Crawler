@@ -16,7 +16,10 @@ sub mock_response {
     my $res = HTTP::Response->new(
         200,
         'OK',
-        HTTP::Headers->new('Content-Length' => length $html),
+        HTTP::Headers->new(
+            'Content-Length'    => length $html,
+            'Content-Type'      => 'text/html'
+        ),
         $html
     );
     return $res;
