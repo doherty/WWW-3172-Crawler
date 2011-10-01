@@ -4,6 +4,7 @@ use warnings;
 # ABSTRACT: A simple web crawler for CSCI 3172 Assignment 1
 # VERSION
 
+use URI::WithBase;
 use Data::Validate::URI qw(is_web_uri);
 use List::UtilsBy qw(nsort_by);
 use HTML::TokeParser::Simple ();
@@ -24,7 +25,7 @@ use Moose::Util::TypeConstraints;
 
 has 'host' => (
     is      => 'rw',
-    isa     => subtype(as 'Str', where { is_web_uri($_) }),
+    isa     => subtype(as 'Str', where { _fix_url($_) }),
     required=> 1,
 );
 
@@ -107,6 +108,7 @@ sub _parse {
     my $html = shift;
 
     return unless $html;
+
     my $parser = HTML::TokeParser::Simple->new(string => $html);
     PARSE: while (my $token = $parser->get_token) {
         if ($token->is_tag('meta')) { # a meta tag! - something to remember & report back later
@@ -117,17 +119,22 @@ sub _parse {
             $self->data->{$uri}->{$type} = $attr->{content};
         }
         elsif ($token->is_tag('a')) { # a link! - something to crawl in the future
-            my $attr = $token->get_attr || next PARSE;
-            my $href = $attr->{href}    || next PARSE;
-            is_web_uri($href)           || next PARSE;
+            my $attr = $token->get_attr             || next PARSE;
+            my $href = _fix_url($attr->{href}, $uri)|| next PARSE;
 
             $self->to_crawl->{ $href }++ # We can track what pages are popular
                 unless $self->crawled->{ $href };
         }
         elsif ($token->is_tag('img')) { # an image! - something to... download?! O.o
-            my $attr = $token->get_attr || next PARSE;
-            my $href = $attr->{src}     || next PARSE;
-            is_web_uri($href)           || next PARSE;
+            my $attr = $token->get_attr             || next PARSE;
+            my $href = _fix_url($attr->{src}, $uri) || next PARSE;
+
+            $self->to_crawl->{ $href }++
+                unless $self->crawled->{ $href };
+        }
+        elsif ($token->is_tag('source')) { # HTML5 audio/video
+            my $attr = $token->get_attr             || next PARSE;
+            my $href = _fix_url($attr->{src}, $uri) || next PARSE;
 
             $self->to_crawl->{ $href }++
                 unless $self->crawled->{ $href };
@@ -136,6 +143,20 @@ sub _parse {
             next PARSE;
         }
     }
+
+    return;
+}
+
+sub _fix_url {
+    my $self    = shift if ref $_[0] eq __PACKAGE__;
+    my $url     = shift;
+    my $source  = shift;
+
+    return $url if is_web_uri($url);
+
+    my $fixed_url = URI::WithBase->new($url, $source);
+    return $fixed_url->abs->as_string
+        if defined is_web_uri($fixed_url->abs->as_string);
 
     return;
 }
