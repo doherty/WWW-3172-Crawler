@@ -232,8 +232,8 @@ sub crawl {
         if ($res->content_type eq 'text/html') {
             $self->_parse($uri, $res->decoded_content);
         }
-        elsif ($res->content_type =~ m{^image/}) {
-            print STDERR "$uri is an image: " . $res->content_type . "\n" if $self->debug;
+        elsif ($res->content_type =~ m{^(?:image|audio|video)/}) {
+            print STDERR "$uri is a binary format: " . $res->content_type . "\n" if $self->debug;
             $self->_parse($uri);
         }
         else {
