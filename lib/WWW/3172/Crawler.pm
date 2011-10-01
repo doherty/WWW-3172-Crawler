@@ -223,7 +223,6 @@ sub crawl {
 
     my $pages_crawled = 0;
     CRAWL: while ( my $uri = $self->_next_uri_to_crawl() ) {
-        last CRAWL if $pages_crawled >= $self->max;
         last CRAWL if !defined($uri);
         next CRAWL if $self->crawled->{$uri};
         print STDERR 'Crawling #' . ($pages_crawled+1) . '/' . $self->max . ": $uri\n" if $self->debug;
@@ -240,7 +239,8 @@ sub crawl {
         else {
             warn "$uri is an unknown type: " . $res->content_type;
         }
-        $pages_crawled++;
+
+        last CRAWL if ++$pages_crawled >= $self->max;
     }
 
     return $self->data;
