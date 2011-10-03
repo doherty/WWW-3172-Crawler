@@ -18,8 +18,8 @@ use Moose::Util::TypeConstraints;
 
     use WWW::3172::Crawler;
     my $crawler = WWW::3172::Crawler->new(host => 'http://hashbang.ca', max => 50);
-    $crawler->crawl;
-    # ... prints out some stats when it is done
+    my $stats = $crawler->crawl;
+    # Present the stats however you want
 
 =cut
 
@@ -83,6 +83,23 @@ has 'debug' => (
 );
 
 =head1 METHODS
+
+=head2 new
+
+The constructor takes a mandatory 'host' parameter, which specifies the starting
+point for the crawler. The 'max' parameter specifies how many pages to visit,
+defaulting to 200.
+
+Additional settings are:
+
+=over 4
+
+=item * debug - whether to print debugging information
+
+=item * ua - a L<LWP::UserAgent> object to use to crawl. This can be used to
+provide a mock useragent which doesn't connect to the internet for testing.
+
+=back
 
 =cut
 
@@ -196,27 +213,23 @@ page size
 
 =item *
 
-load times
-
-=item *
-
-TODO: W3C validation report from http://validator.w3.org/
-
-=item *
-
-TODO: Accessibility validation report from http://achecker.ca/checker/index.php
-
-=item *
-
-TODO: Fetch and parse pages in parallel.
+load time
 
 =back
 
 The data is returned as a hash keyed on URL.
 
+Image, video, and audio are also fetched, evaluated for size and speed.
+
+Crawling ends when there are no more URLs in the crawl queue, or the maximum
+number of pages is reached.
+
+URLs are crawled in order of the number of appearances the crawler has seen.
+This is somewhat similar to Google's PageRank algorithm, where popularity of a
+page, as measured by inbound links, is a major factor in a page's ranking in
+search results.
+
 =cut
-# Hash page content to detect aliases
-# Multithreading
 
 sub crawl {
     my $self = shift;
