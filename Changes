@@ -1,6 +1,8 @@
 Revision history for Perl module {{$dist->name}}
 
 {{$NEXT}}
+
+0.001     2011-10-03
  - First stab at the crawler
     - Required stats: meta description and keywords
     - Extra stats: load time, size
