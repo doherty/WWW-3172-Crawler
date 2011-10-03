@@ -41,6 +41,7 @@ my %WriteMakefileArgs = (
     "Moose::Util::TypeConstraints" => 0,
     "Pod::Usage" => 0,
     "Time::HiRes" => 0,
+    "URI::WithBase" => 0,
     "namespace::autoclean" => 0,
     "strict" => 0,
     "warnings" => 0

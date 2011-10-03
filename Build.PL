@@ -40,6 +40,7 @@ my %module_build_args = (
     "Moose::Util::TypeConstraints" => 0,
     "Pod::Usage" => 0,
     "Time::HiRes" => 0,
+    "URI::WithBase" => 0,
     "namespace::autoclean" => 0,
     "perl" => "5.006",
     "strict" => 0,
