@@ -165,7 +165,6 @@ sub _parse {
 }
 
 sub _fix_url {
-    my $self    = shift if ref $_[0] eq __PACKAGE__;
     my $url     = shift;
     my $source  = shift;
 
