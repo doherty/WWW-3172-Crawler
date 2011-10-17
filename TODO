@@ -1,0 +1,11 @@
+ - Obey rel nofollow
+ - Implement term vector stuff
+ - URL normalization:
+
+Crawling #1/50: http://dal.ca
+Crawling #2/50: http://dal.ca#
+Crawling #3/50: http://dal.ca/
+...
+Crawling #10/50: http://www.dal.ca/
+...
+Crawling #50/50: http://dal.ca/#

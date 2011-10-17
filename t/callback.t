@@ -1,7 +1,7 @@
 #!perl
 use strict;
 use warnings;
-use Test::More tests => 3;
+use Test::More tests => 4;
 use Test::Mock::LWP::Dispatch ();
 use HTTP::Response;
 use HTTP::Headers;
@@ -12,7 +12,7 @@ sub mock_response {
     die 'Unsupported method: ' . $req->method unless $req->method eq 'GET';
 
     my $uri     = $req->uri;
-    my ($file)  = $uri =~ m{\Qhttp://127.0.0.1/\E(.*)$};
+    my ($file)  = $uri =~ m{^\Qhttp://127.0.0.1/\E(.*)$};
     my ($ext)   = $file =~ m{\.(.*)$};
 
     my $html    = do { open my $in, '<', "t/$file" or die $!; local $/; <$in> };
@@ -36,19 +36,34 @@ $mock_ua->map(
     \&mock_response,
 );
 
+sub callback {
+    my $uri  = shift;
+    my $data = shift;
+
+    isa_ok($data, 'HASH', 'data is a hashref');
+    is($uri, $url, 'URL is included & correct');
+
+    delete $data->{speed};
+    is_deeply( $data,
+    {
+        size  => 240,
+        stems => {
+            your    => 1,
+            browser => 1,
+            support => 1,
+            audio   => 1,
+            element => 1,
+        }
+    }) or diag explain $data;
+}
+
 my $crawler = WWW::3172::Crawler->new(
     host    => $url,
     ua      => $mock_ua,
-    max     => 2,
+    max     => 1,
+    callback=> \&callback,
 );
-my $data = $crawler->crawl;
+my $end_data = $crawler->crawl;
 
-isa_ok($data, 'HASH');
-isa_ok($crawler->to_crawl, 'HASH');
-
-my @is = (keys %$data, keys %{ $crawler->to_crawl });
-my @ought = ('http://127.0.0.1/horse.mp3', 'http://127.0.0.1/horse.ogg', $url);
-
-is_deeply( [sort @is], [sort @ought], 'Audio URLs added to crawl list')
-    or diag explain {is => \@is, ought => \@ought};
+is($end_data, undef, 'No data returned when callback is in place');
 

@@ -7,7 +7,12 @@ use warnings;
 use URI::WithBase;
 use Data::Validate::URI qw(is_web_uri);
 use List::UtilsBy qw(nsort_by);
+use List::MoreUtils qw(uniq);
 use HTML::TokeParser::Simple ();
+use HTML::TreeBuilder ();
+use Lingua::Stem::Snowball ();
+use Lingua::StopWords qw(getStopWords);
+use Text::Unidecode qw(unidecode);
 use LWP::RobotUA ();
 use Time::HiRes qw(time);
 use namespace::autoclean;
@@ -78,8 +83,36 @@ has 'to_crawl' => (
 
 has 'debug' => (
     is      => 'rw',
-    isa     => 'Bool',
+    isa     => (subtype as 'Int', where { defined $_ and $_ >= 0 }),
     default => 0,
+);
+
+has 'stemmer' => (
+    is      => 'ro',
+    isa     => 'Lingua::Stem::Snowball',
+    default => sub {
+        return Lingua::Stem::Snowball->new(
+            lang        => 'en',
+            encoding    => 'UTF-8',
+        );
+    },
+    lazy    => 1,
+    required=> 1,
+);
+
+has 'stopwords' => (
+    is      => 'ro',
+    isa     => 'HashRef',
+    default => sub { getStopWords('en', 'UTF-8'); },
+    lazy    => 1,
+    required=> 1,
+);
+
+has 'callback' => (
+    is          => 'rw',
+    isa         => 'CodeRef',
+    clearer     => 'clear_callback',
+    predicate   => 'has_callback',
 );
 
 =head1 METHODS
@@ -98,6 +131,21 @@ Additional settings are:
 
 =item * ua - a L<LWP::UserAgent> object to use to crawl. This can be used to
 provide a mock useragent which doesn't connect to the internet for testing.
+
+=item * callback - a coderef which gets called for each page crawled. The
+coderef is called with two parameters: the URL and a hashref of data. This can
+be used to do incremental processing, instead of doing the crawl run all at once
+and returning a large hashref of data. This also reduces memory requirements.
+
+    WWW::3172::Crawler->new(
+        host    => 'http://google.com',
+        callback=> sub {
+            my $url  = shift;
+            my $data = shift;
+            print "Got data about $url:\n";
+            print "Stems: @{ $data->{stems} }\n";
+        },
+    )->crawl;
 
 =back
 
@@ -186,8 +234,38 @@ sub _next_uri_to_crawl {
     return unless $url;
     delete $self->to_crawl->{$url};
 
-    print STDERR "Next URL: $url\n" if $self->debug;
+    print STDERR "Next URL: $url\n" if $self->debug and $self->debug > 1;
     return $url;
+}
+
+sub _stem {
+    my $self = shift;
+    my $url  = shift;
+
+    my $text;
+    {
+        my $tree = HTML::TreeBuilder->new();
+        $tree->parse_content(shift);
+        $tree->elementify();
+        $text = $tree->as_text;
+        $tree->delete;
+    }
+
+    my $punct = quotemeta q{.,[]()<>{}+-=_'"\|};
+    my @split = map {
+        s{\A[$punct]}{};
+        s{[$punct]\Z}{};
+
+        length($_) < 2 || exists $self->stopwords->{$_}
+            ? ()
+            : unidecode($_)
+    } split /\s+|\b/, $text;
+    my @words = $self->stemmer->stem(\@split);
+
+    my %stems;
+    $stems{$_}++ for @words;
+
+    $self->data->{$url}->{stems} = \%stems;
 }
 
 =head2 crawl
@@ -200,19 +278,47 @@ basic statistics for each page crawled:
 
 =item *
 
-description meta tag
+Description meta tag
 
 =item *
 
-keywords meta tag
+Keywords meta tag
 
 =item *
 
-page size
+Page size
 
 =item *
 
-load time
+Load time
+
+=item *
+
+Page text
+
+=item *
+
+Keywords extracted from page text using the following technique:
+
+=over 4
+
+=item 1)
+
+Split page text on whitespace
+
+=item 2)
+
+Skip L<stopwords|Lingua::Stopwords>
+
+=item 3)
+
+L<"Normalize"|Text::Unidecode> to remove non-ASCII characters
+
+=item 4)
+
+Run L<Porter's stemming algorithm|Lingua::Stem::Snowball>
+
+=back
 
 =back
 
@@ -243,18 +349,22 @@ sub crawl {
 
         if ($res->content_type eq 'text/html') {
             $self->_parse($uri, $res->decoded_content);
+            $self->_stem($uri, $res->decoded_content);
         }
         elsif ($res->content_type =~ m{^(?:image|audio|video)/}) {
-            print STDERR "$uri is a binary format: " . $res->content_type . "\n" if $self->debug;
+            print STDERR "$uri is a binary format: " . $res->content_type . "\n" if $self->debug and $self->debug > 1;
             $self->_parse($uri);
         }
         else {
             warn "$uri is an unknown type: " . $res->content_type;
         }
 
+        $self->callback->($uri, delete $self->data->{$uri}) if $self->has_callback;
+
         last CRAWL if ++$pages_crawled >= $self->max;
     }
 
+    return if $self->has_callback;
     return $self->data;
 }
 

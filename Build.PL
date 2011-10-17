@@ -24,22 +24,29 @@ my %module_build_args = (
     "Mike Doherty <doherty\@cpan.org>"
   ],
   "dist_name" => "WWW-3172-Crawler",
-  "dist_version" => "0.001",
+  "dist_version" => "v0.2",
   "license" => "perl",
   "module_name" => "WWW::3172::Crawler",
   "recommends" => {},
   "recursive_test_files" => 1,
   "requires" => {
+    "DBI" => 0,
     "Data::Printer" => 0,
     "Data::Validate::URI" => 0,
     "Getopt::Long" => 0,
     "HTML::TokeParser::Simple" => 0,
+    "HTML::TreeBuilder" => 0,
     "LWP::RobotUA" => 0,
+    "Lingua::Stem::Snowball" => 0,
+    "Lingua::StopWords" => 0,
+    "List::MoreUtils" => 0,
     "List::UtilsBy" => 0,
     "Moose" => 0,
     "Moose::Util::TypeConstraints" => 0,
     "Pod::Usage" => 0,
+    "Text::Unidecode" => 0,
     "Time::HiRes" => 0,
+    "Try::Tiny" => 0,
     "URI::WithBase" => 0,
     "namespace::autoclean" => 0,
     "perl" => "5.006",
@@ -47,6 +54,7 @@ my %module_build_args = (
     "warnings" => 0
   },
   "script_files" => [
+    "bin/crawler2mysql",
     "bin/crawler"
   ]
 );

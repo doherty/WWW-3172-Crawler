@@ -26,27 +26,35 @@ my %WriteMakefileArgs = (
   },
   "DISTNAME" => "WWW-3172-Crawler",
   "EXE_FILES" => [
+    "bin/crawler2mysql",
     "bin/crawler"
   ],
   "LICENSE" => "perl",
   "NAME" => "WWW::3172::Crawler",
   "PREREQ_PM" => {
+    "DBI" => 0,
     "Data::Printer" => 0,
     "Data::Validate::URI" => 0,
     "Getopt::Long" => 0,
     "HTML::TokeParser::Simple" => 0,
+    "HTML::TreeBuilder" => 0,
     "LWP::RobotUA" => 0,
+    "Lingua::Stem::Snowball" => 0,
+    "Lingua::StopWords" => 0,
+    "List::MoreUtils" => 0,
     "List::UtilsBy" => 0,
     "Moose" => 0,
     "Moose::Util::TypeConstraints" => 0,
     "Pod::Usage" => 0,
+    "Text::Unidecode" => 0,
     "Time::HiRes" => 0,
+    "Try::Tiny" => 0,
     "URI::WithBase" => 0,
     "namespace::autoclean" => 0,
     "strict" => 0,
     "warnings" => 0
   },
-  "VERSION" => "0.001",
+  "VERSION" => "v0.2",
   "test" => {
     "TESTS" => "t/*.t"
   }

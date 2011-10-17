@@ -1,0 +1,128 @@
+#!/usr/bin/env perl
+package crawler2mysql;
+use strict;
+use warnings;
+# ABSTRACT: command-line script to control WWW::3172::Crawler
+# VERSION
+
+use WWW::3172::Crawler;
+use Getopt::Long;
+use Pod::Usage;
+use Data::Printer alias => 'dump';
+use DBI;
+use Config::General qw(ParseConfig);
+
+my %opts = (
+    max => 50,
+);
+GetOptions( \%opts,
+    'help|?',
+    'version',
+    'max=i',
+    'debug+',
+);
+
+my $host = shift;
+pod2usage(
+    -verbose => 2,
+) if $opts{help} or !$host;
+
+=head1 SYNOPSIS
+
+    3137-crawler http://example.com
+    3137-crawler --max=50 http://example.com
+
+=head1 DESCRIPTION
+
+B<3172-crawler> is a command line script to control a L<crawler|WWW::3172::Crawler>.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<--max>
+
+Specify the maximum number of pages to crawl. Default is 50.
+
+=item B<--help>, -h, -?
+
+Opens this man page and exits.
+
+=item B<--version>
+
+Prints the version of this program and supporting libraries.
+
+=item B<--debug>
+
+Print debugging information.
+
+=back
+
+=cut
+
+if (delete $opts{version}) {
+    my $this = __PACKAGE__;
+    my $this_ver = defined __PACKAGE__->VERSION ? __PACKAGE__->VERSION : 'dev';
+    print "$this version $this_ver\n" and exit;
+}
+
+print "Crawling $opts{max} pages, starting at $host\n";
+print "Dry run -- aborting\n" and exit if $opts{'dry-run'};
+
+my %conf = ParseConfig('db.conf');
+my $dbh = DBI->connect(
+    "DBI:mysql:database=doherty;host=$conf{host}",
+    $conf{username},
+    $conf{password},
+);
+$dbh->{'mysql_enable_utf8'} = 1;
+$dbh->{'AutoCommit'}        = 0;
+$dbh->trace('1|SQL') if $opts{debug} and $opts{debug} > 1;
+
+my %sql = (
+    words_insert    => $dbh->prepare('INSERT IGNORE INTO words (word_str) VALUES (?)'),
+    words_select    => $dbh->prepare('SELECT word_id FROM words WHERE word_str = ?'),
+    url_insert      => $dbh->prepare('INSERT INTO url (url_str) VALUES (?)'),
+    url_words_insert=> $dbh->prepare('INSERT INTO url_words (url_id, word_id, url_word_count) VALUES (?,?,?)'),
+    start           => $dbh->prepare('START TRANSACTION'),
+    commit          => $dbh->prepare('COMMIT'),
+    rollback        => $dbh->prepare('ROLLBACK'),
+);
+
+my $crawler = WWW::3172::Crawler->new(
+    host    => $host,
+    max     => $opts{max},
+    debug   => $opts{debug},
+    callback=> sub {
+        my $uri  = shift;
+        my $data = shift;
+        print "Got data for $uri\n" if $opts{debug} and $opts{debug} > 1;
+
+        $sql{start}->execute;   # START TRANSACTION
+
+        # INSERT url
+        $sql{url_insert}->execute($uri);
+        my $url_id = $dbh->last_insert_id(undef, undef, undef, undef);
+
+        # INSERT stemmed words
+        while (my ($stem, $count) = each %{ $data->{stems} }) {
+            $sql{words_insert}->execute($stem);
+            my $word_id = $dbh->last_insert_id(undef, undef, undef, undef);
+
+            unless ($word_id) { # Was a duplicate word
+                my $data = $dbh->selectrow_hashref($sql{words_select}, {}, $stem);
+                $word_id = $data->{word_id};
+            }
+
+            # INSERT url<->word mappings
+            $sql{url_words_insert}->execute($url_id, $word_id, $count);
+        }
+
+        $sql{commit}->execute;  # COMMIT
+    },
+);
+$crawler->crawl;
+
+$dbh->commit;
+$dbh->disconnect;
+

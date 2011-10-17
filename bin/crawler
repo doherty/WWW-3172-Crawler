@@ -73,5 +73,7 @@ my $crawler = WWW::3172::Crawler->new(
 );
 
 my $data = $crawler->crawl;
+delete $data->{$_}->{stems} for keys %$data;
+
 dump $data;
 

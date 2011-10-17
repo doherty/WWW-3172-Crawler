@@ -2,7 +2,7 @@ NAME
     WWW::3172::Crawler - A simple web crawler for CSCI 3172 Assignment 1
 
 VERSION
-    version 0.001
+    version v0.2
 
 SYNOPSIS
         use WWW::3172::Crawler;
@@ -29,13 +29,27 @@ METHODS
     The robot respects robots.txt. At the end of the crawling run, reports
     some basic statistics for each page crawled:
 
-    *   description meta tag
+    *   Description meta tag
 
-    *   keywords meta tag
+    *   Keywords meta tag
 
-    *   page size
+    *   Page size
 
-    *   load time
+    *   Load time
+
+    *   Page text
+
+    *   Keywords extracted from page text using the following technique:
+
+        1)  Split page text on whitespace
+
+        2)  Skip stopwords
+
+        3)  "Normalize" to remove non-ASCII characters
+
+        4)  Skip duplicates
+
+        5)  Run Porter's stemming algorithm
 
     The data is returned as a hash keyed on URL.
 
@@ -50,6 +64,8 @@ METHODS
     a page's ranking in search results.
 
 AVAILABILITY
+    The project homepage is <http://metacpan.org/release/WWW-3172-Crawler/>.
+
     The latest version of this module is available from the Comprehensive
     Perl Archive Network (CPAN). Visit <http://www.perl.com/CPAN/> to find a
     CPAN site near you, or see

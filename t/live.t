@@ -1,7 +1,7 @@
 #!perl
 use strict;
 use warnings;
-use Test::More;# tests => 3;
+use Test::More;
 use WWW::3172::Crawler ();
 
 my $gif = 'http://imgur.com/images/imgur.gif';
