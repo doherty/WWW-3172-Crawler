@@ -24,7 +24,7 @@ my %module_build_args = (
     "Mike Doherty <doherty\@cpan.org>"
   ],
   "dist_name" => "WWW-3172-Crawler",
-  "dist_version" => "0.002",
+  "dist_version" => "v0.002",
   "license" => "perl",
   "module_name" => "WWW::3172::Crawler",
   "recommends" => {},

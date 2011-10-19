@@ -1,6 +1,8 @@
 Revision history for Perl module {{$dist->name}}
 
 {{$NEXT}}
+
+v0.002    2011-10-19
  - A callback for incremental processing and reduced memory usage
  - A new CLI script to insert data into mysql
  - A mysql schema
