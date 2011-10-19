@@ -252,7 +252,7 @@ sub _stem {
     }
 
     my $punct = quotemeta q{.,[]()<>{}+-=_'"\|};
-    my @split = map {
+    my @split = map { ## no critic (ControlStructures::ProhibitMutatingListFunctions)
         s{\A[$punct]}{};
         s{[$punct]\Z}{};
 
