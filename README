@@ -2,7 +2,7 @@ NAME
     WWW::3172::Crawler - A simple web crawler for CSCI 3172 Assignment 1
 
 VERSION
-    version v0.2
+    version 0.002
 
 SYNOPSIS
         use WWW::3172::Crawler;
@@ -23,6 +23,22 @@ METHODS
     *   ua - a LWP::UserAgent object to use to crawl. This can be used to
         provide a mock useragent which doesn't connect to the internet for
         testing.
+
+    *   callback - a coderef which gets called for each page crawled. The
+        coderef is called with two parameters: the URL and a hashref of
+        data. This can be used to do incremental processing, instead of
+        doing the crawl run all at once and returning a large hashref of
+        data. This also reduces memory requirements.
+
+            WWW::3172::Crawler->new(
+                host    => 'http://google.com',
+                callback=> sub {
+                    my $url  = shift;
+                    my $data = shift;
+                    print "Got data about $url:\n";
+                    print "Stems: @{ $data->{stems} }\n";
+                },
+            )->crawl;
 
   crawl
     Begins crawling at the provided link, collecting statistics as it goes.
@@ -47,9 +63,7 @@ METHODS
 
         3)  "Normalize" to remove non-ASCII characters
 
-        4)  Skip duplicates
-
-        5)  Run Porter's stemming algorithm
+        4)  Run Porter's stemming algorithm
 
     The data is returned as a hash keyed on URL.
 

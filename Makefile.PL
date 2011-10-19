@@ -32,6 +32,7 @@ my %WriteMakefileArgs = (
   "LICENSE" => "perl",
   "NAME" => "WWW::3172::Crawler",
   "PREREQ_PM" => {
+    "Config::General" => 0,
     "DBI" => 0,
     "Data::Printer" => 0,
     "Data::Validate::URI" => 0,
@@ -48,13 +49,12 @@ my %WriteMakefileArgs = (
     "Pod::Usage" => 0,
     "Text::Unidecode" => 0,
     "Time::HiRes" => 0,
-    "Try::Tiny" => 0,
     "URI::WithBase" => 0,
     "namespace::autoclean" => 0,
     "strict" => 0,
     "warnings" => 0
   },
-  "VERSION" => "v0.2",
+  "VERSION" => "0.002",
   "test" => {
     "TESTS" => "t/*.t"
   }

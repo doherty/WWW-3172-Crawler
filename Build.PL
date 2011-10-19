@@ -24,12 +24,13 @@ my %module_build_args = (
     "Mike Doherty <doherty\@cpan.org>"
   ],
   "dist_name" => "WWW-3172-Crawler",
-  "dist_version" => "v0.2",
+  "dist_version" => "0.002",
   "license" => "perl",
   "module_name" => "WWW::3172::Crawler",
   "recommends" => {},
   "recursive_test_files" => 1,
   "requires" => {
+    "Config::General" => 0,
     "DBI" => 0,
     "Data::Printer" => 0,
     "Data::Validate::URI" => 0,
@@ -46,7 +47,6 @@ my %module_build_args = (
     "Pod::Usage" => 0,
     "Text::Unidecode" => 0,
     "Time::HiRes" => 0,
-    "Try::Tiny" => 0,
     "URI::WithBase" => 0,
     "namespace::autoclean" => 0,
     "perl" => "5.006",
